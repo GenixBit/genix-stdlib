@@ -1,0 +1,41 @@
+fn abs_int(value: int) -> int {
+    if value < 0 {
+        return -value;
+    }
+    return value;
+}
+
+fn abs_float(value: float) -> float {
+    if value < 0.0 {
+        return -value;
+    }
+    return value;
+}
+
+fn min_int(a: int, b: int) -> int {
+    if a < b {
+        return a;
+    }
+    return b;
+}
+
+fn max_int(a: int, b: int) -> int {
+    if a > b {
+        return a;
+    }
+    return b;
+}
+
+fn clamp_int(value: int, minimum: int, maximum: int) -> int {
+    if value < minimum {
+        return minimum;
+    }
+    if value > maximum {
+        return maximum;
+    }
+    return value;
+}
+
+fn square(value: float) -> float {
+    return value * value;
+}
