@@ -2,50 +2,148 @@
 
 The official standard library for the **Genix programming language** by **GenixBit**.
 
-> Status: early development / pre-alpha. APIs are expected to change.
+> Status: **pre-alpha / 0.0.1**. APIs may change before the first stable Genix release.
 
-## Purpose
+## Compatibility
 
-`genix-stdlib` provides the batteries-included APIs that most `.gb` programs should be able to rely on without third-party dependencies.
+The standard library publishes machine-readable compatibility metadata in `COMPATIBILITY`.
 
-## Planned modules
+Current compatibility:
 
-- `core` — fundamental language-facing types and utilities
-- `collections` — lists, maps, sets, iterators
-- `io` — input/output helpers
-- `fs` — files and directories
-- `path` — portable path handling
-- `json` — JSON encoding and decoding
-- `math` — numeric utilities
-- `time` — dates, durations, clocks
-- `net` — networking primitives
-- `http` — HTTP client/server foundations
-- `crypto` — safe cryptographic interfaces
-- `process` — environment and process control
-- `concurrent` — concurrency utilities
-- `test` — testing primitives
+```text
+GENIX_STDLIB_VERSION=0.0.1
+GENIX_LANGUAGE_VERSION=0.0.1
+GENIX_RUNTIME_ABI=1
+```
 
-## Design goals
+The Genix compiler validates this metadata before loading an official stdlib module.
 
-- Consistent APIs
-- Strong typing
-- Safe defaults
-- Cross-platform behavior where practical
-- Minimal hidden magic
-- Clear separation between stable core APIs and experimental packages
+## Use the standard library
 
-## Example direction
+During source development, point the compiler to this repository or an installed stdlib directory:
+
+```bash
+export GENIX_STDLIB=/path/to/genix-stdlib
+```
+
+Then a normal Genix project can import standard modules:
 
 ```gb
-use fs
+import io;
+import math;
+import string;
 
 fn main() {
-    let text = fs.read_text("hello.txt")?
-    print(text)
+    io.println("Hello from Genix stdlib");
+
+    let value: int = math.abs_int(-42);
+    io.print_int(value);
+
+    let message: string = string.concat("Hello ", "Genix");
+    io.println(message);
 }
 ```
 
-The syntax above represents the intended direction and is not yet a stable language contract.
+Project-local modules take precedence over standard-library modules with the same name.
+
+## Implemented modules
+
+### `io`
+
+Current API:
+
+```text
+io.println(text: string)
+io.print_int(value: int)
+io.print_float(value: float)
+io.print_bool(value: bool)
+```
+
+These functions are written in Genix and currently delegate to the language `print(...)` primitive. Input APIs will be added after the native intrinsic/FFI boundary is formalized.
+
+### `math`
+
+Current API:
+
+```text
+math.abs_int(value: int) -> int
+math.abs_float(value: float) -> float
+math.min_int(a: int, b: int) -> int
+math.max_int(a: int, b: int) -> int
+math.clamp_int(value: int, minimum: int, maximum: int) -> int
+math.square(value: float) -> float
+```
+
+### `string`
+
+Current API:
+
+```text
+string.concat(left: string, right: string) -> string
+string.equals(left: string, right: string) -> bool
+string.not_equals(left: string, right: string) -> bool
+```
+
+## Repository layout
+
+```text
+genix-stdlib/
+├── COMPATIBILITY
+├── modules/
+│   ├── io.gb
+│   ├── math.gb
+│   └── string.gb
+├── examples/
+│   └── smoke/
+└── .github/
+    └── workflows/
+        └── ci.yml
+```
+
+## Architecture
+
+Standard-library modules are ordinary `.gb` source modules. This keeps most high-level APIs portable and testable by both the interpreter and native compiler.
+
+```text
+Genix application
+      ↓
+Genix stdlib modules
+      ↓
+Language primitives / future intrinsics
+      ↓
+Genix Runtime ABI
+      ↓
+Operating system
+```
+
+Low-level functionality that requires operating-system access will use a documented compiler intrinsic / runtime ABI boundary rather than embedding platform-specific behavior directly in `.gb` modules.
+
+## Planned modules
+
+- `core`
+- `collections`
+- `fs`
+- `path`
+- `json`
+- `time`
+- `net`
+- `http`
+- `crypto`
+- `process`
+- `concurrent`
+- `test`
+
+`process` and other OS-facing APIs are intentionally not faked in the first release. They will be implemented after the native intrinsic/FFI contract is defined.
+
+## Validation
+
+CI validates the stdlib against the current `genix-lang` compiler and `genix-runtime`, including:
+
+- Static type checking
+- Interpreter execution
+- Typed Genix IR generation
+- Native compilation
+- Execution of the generated native binary
 
 ---
 
