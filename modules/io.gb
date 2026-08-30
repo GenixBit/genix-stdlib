@@ -1,0 +1,15 @@
+fn println(text: string) {
+    print(text);
+}
+
+fn print_int(value: int) {
+    print(value);
+}
+
+fn print_float(value: float) {
+    print(value);
+}
+
+fn print_bool(value: bool) {
+    print(value);
+}
