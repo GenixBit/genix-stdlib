@@ -1,0 +1,11 @@
+import io;
+import math;
+import string;
+
+fn main() {
+    io.println("stdlib smoke");
+    io.print_int(math.abs_int(-7));
+    io.print_int(math.max_int(4, 9));
+    io.print_float(math.square(3.0));
+    io.print_bool(string.equals(string.concat("Ge", "nix"), "Genix"));
+}
