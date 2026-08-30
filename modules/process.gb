@@ -1,0 +1,8 @@
+// Genix process APIs. These functions are compiler-recognized host intrinsics.
+
+fn env(name: string) -> string {
+    return "";
+}
+
+fn exit(code: int) {
+}
