@@ -46,3 +46,27 @@ jobs:
 
       - name: Execute native stdlib binary
         run: ./examples/smoke/build/stdlib-smoke
+
+      - name: Check host-service stdlib project
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- check examples/host
+
+      - name: Run host services through interpreter
+        run: |
+          export GENIX_STDLIB_HOST_TEST=stdlib-interpreter-ok
+          output=$(printf 'Ada\n' | cargo run --quiet --manifest-path genix-lang/Cargo.toml -- run examples/host)
+          echo "$output"
+          echo "$output" | grep 'Hello Ada'
+          echo "$output" | grep 'stdlib-interpreter-ok'
+          rm -f stdlib-host.txt
+
+      - name: Build native host-service project
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- build examples/host
+
+      - name: Execute native host-service project
+        run: |
+          export GENIX_STDLIB_HOST_TEST=stdlib-native-ok
+          output=$(printf 'Grace\n' | ./examples/host/build/stdlib-host)
+          echo "$output"
+          echo "$output" | grep 'Hello Grace'
+          echo "$output" | grep 'stdlib-native-ok'
+          rm -f stdlib-host.txt
