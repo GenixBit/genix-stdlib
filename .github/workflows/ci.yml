@@ -1,0 +1,48 @@
+name: Genix Stdlib CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GENIX_STDLIB: ${{ github.workspace }}
+      GENIX_RUNTIME: ${{ github.workspace }}/genix-runtime
+
+    steps:
+      - name: Checkout stdlib
+        uses: actions/checkout@v4
+
+      - name: Checkout Genix compiler
+        uses: actions/checkout@v4
+        with:
+          repository: GenixBit/genix-lang
+          path: genix-lang
+
+      - name: Checkout Genix runtime
+        uses: actions/checkout@v4
+        with:
+          repository: GenixBit/genix-runtime
+          path: genix-runtime
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check stdlib project
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- check examples/smoke
+
+      - name: Run stdlib project
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- run examples/smoke
+
+      - name: Inspect stdlib IR
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- ir examples/smoke
+
+      - name: Build native stdlib project
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- build examples/smoke
+
+      - name: Execute native stdlib binary
+        run: ./examples/smoke/build/stdlib-smoke
