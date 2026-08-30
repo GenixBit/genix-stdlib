@@ -70,3 +70,27 @@ jobs:
           echo "$output" | grep 'Hello Grace'
           echo "$output" | grep 'stdlib-native-ok'
           rm -f stdlib-host.txt
+
+      - name: Check safe Option Result APIs
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- check examples/safe
+
+      - name: Run safe APIs through interpreter
+        run: |
+          unset GENIX_STDLIB_SAFE_MISSING || true
+          output=$(cargo run --quiet --manifest-path genix-lang/Cargo.toml -- run examples/safe)
+          echo "$output"
+          echo "$output" | grep 'missing-env-ok'
+          echo "$output" | grep 'stdlib-safe-ok'
+          rm -f stdlib-safe.txt
+
+      - name: Build native safe API project
+        run: cargo run --manifest-path genix-lang/Cargo.toml -- build examples/safe
+
+      - name: Execute native safe API project
+        run: |
+          unset GENIX_STDLIB_SAFE_MISSING || true
+          output=$(./examples/safe/build/stdlib-safe)
+          echo "$output"
+          echo "$output" | grep 'missing-env-ok'
+          echo "$output" | grep 'stdlib-safe-ok'
+          rm -f stdlib-safe.txt
