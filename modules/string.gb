@@ -1,0 +1,11 @@
+fn concat(left: string, right: string) -> string {
+    return left + right;
+}
+
+fn equals(left: string, right: string) -> bool {
+    return left == right;
+}
+
+fn not_equals(left: string, right: string) -> bool {
+    return left != right;
+}
