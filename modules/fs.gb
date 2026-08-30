@@ -1,0 +1,8 @@
+// Genix filesystem APIs. These functions are compiler-recognized host intrinsics.
+
+fn read_text(path: string) -> string {
+    return "";
+}
+
+fn write_text(path: string, text: string) {
+}
