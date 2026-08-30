@@ -35,22 +35,13 @@ io.print_bool(value: bool)
 io.input(prompt: string) -> string
 ```
 
-Example:
-
-```gb
-import io;
-
-fn main() {
-    let name: string = io.input("Your name: ");
-    io.println("Hello " + name);
-}
-```
-
 ### `fs`
 
+Preferred recoverable APIs:
+
 ```text
-fs.read_text(path: string) -> string
-fs.write_text(path: string, text: string)
+fs.try_read_text(path: string) -> Result<string,string>
+fs.try_write_text(path: string, text: string) -> Result<bool,string>
 ```
 
 Example:
@@ -58,21 +49,56 @@ Example:
 ```gb
 import fs;
 
-fn main() {
-    fs.write_text("hello.txt", "Hello Genix");
-    let text: string = fs.read_text("hello.txt");
-    print(text);
+fn load(path: string) -> Result<string,string> {
+    let text: string = fs.try_read_text(path)?;
+    return Ok(text);
 }
 ```
 
+The original bootstrap APIs remain temporarily available for compatibility:
+
+```text
+fs.read_text(path: string) -> string
+fs.write_text(path: string, text: string)
+```
+
+Those legacy forms may panic/terminate on host I/O failure in native mode, so new code should prefer the `try_` variants.
+
 ### `process`
+
+Preferred optional environment lookup:
+
+```text
+process.env_option(name: string) -> Option<string>
+```
+
+Example:
+
+```gb
+import process;
+
+fn main() {
+    let home: Option<string> = process.env_option("HOME");
+
+    match home {
+        Some(value) => {
+            print(value);
+        }
+        None => {
+            print("HOME is not set");
+        }
+    }
+}
+```
+
+Compatibility APIs:
 
 ```text
 process.env(name: string) -> string
 process.exit(code: int)
 ```
 
-A missing environment variable currently returns an empty string. Rich optional/result types will replace this simplified behavior once those language features exist.
+`process.env` still represents a missing variable as an empty string. New code should prefer `process.env_option` when absence matters.
 
 ### `math`
 
@@ -93,21 +119,34 @@ string.equals(left: string, right: string) -> bool
 string.not_equals(left: string, right: string) -> bool
 ```
 
-## Host intrinsic boundary
+## Typed error handling
 
-Most standard-library code remains ordinary `.gb` source. OS-facing operations are recognized by the compiler at a small canonical boundary:
+The current compiler supports primitive-payload forms of:
 
 ```text
-io.input      → host stdin / gb_input
-fs.read_text  → host filesystem / gb_fs_read_text
-fs.write_text → host filesystem / gb_fs_write_text
-process.env   → host environment / gb_env_get
-process.exit  → host process / gb_process_exit
+Option<int|float|bool|string>
+Result<int|float|bool|string, string>
 ```
 
-Users call the normal stdlib APIs; the compiler-specific mapping is an implementation detail. `gb run` provides equivalent behavior through the Rust interpreter, while `gb build` lowers the calls to Genix Runtime ABI services.
+with `Some`, `None`, `Ok`, `Err`, exhaustive `match`, and Result propagation with `?`.
 
-This is the bootstrap intrinsic layer. A formal native/FFI declaration system is still planned for external libraries and advanced platform integrations.
+Arbitrary user-defined generic payloads and custom error types are planned for later language revisions.
+
+## Host intrinsic boundary
+
+Most standard-library code remains ordinary `.gb` source. OS-facing operations are recognized by the compiler at a small canonical boundary.
+
+Safe mappings include:
+
+```text
+process.env_option → host environment / gb_env_get_option
+fs.try_read_text   → host filesystem / gb_fs_try_read_text
+fs.try_write_text  → host filesystem / gb_fs_try_write_text
+```
+
+`gb run` implements equivalent host behavior through the Rust interpreter. `gb build` lowers these calls to the Genix Runtime ABI.
+
+This remains the bootstrap intrinsic layer; a formal native/FFI declaration system is still planned.
 
 ## Repository layout
 
@@ -121,7 +160,9 @@ genix-stdlib/
 │   ├── math.gb
 │   └── string.gb
 ├── examples/
-│   └── smoke/
+│   ├── smoke/
+│   ├── host/
+│   └── safe/
 └── .github/
     └── workflows/
         └── ci.yml
@@ -156,7 +197,7 @@ Operating system
 
 ## Validation
 
-CI validates the stdlib against `genix-lang` and `genix-runtime`, including static type checking, interpreter execution, typed IR generation, native compilation, and native execution.
+CI validates the stdlib against `genix-lang` and `genix-runtime`, including static type checking, Option/Result semantics, interpreter execution, typed IR generation, native compilation, safe host I/O, and native execution.
 
 ---
 
