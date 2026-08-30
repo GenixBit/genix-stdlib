@@ -13,3 +13,8 @@ fn print_float(value: float) {
 fn print_bool(value: bool) {
     print(value);
 }
+
+// Compiler-recognized host intrinsic. The body is a portable type-checking fallback.
+fn input(prompt: string) -> string {
+    return "";
+}
