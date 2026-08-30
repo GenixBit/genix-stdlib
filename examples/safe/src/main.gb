@@ -1,0 +1,30 @@
+import fs;
+import process;
+
+fn roundtrip(path: string) -> Result<string,string> {
+    let written: bool = fs.try_write_text(path, "stdlib-safe-ok")?;
+    let text: string = fs.try_read_text(path)?;
+    return Ok(text);
+}
+
+fn main() {
+    let env: Option<string> = process.env_option("GENIX_STDLIB_SAFE_MISSING");
+    match env {
+        Some(value) => {
+            print(value);
+        }
+        None => {
+            print("missing-env-ok");
+        }
+    }
+
+    let result: Result<string,string> = roundtrip("stdlib-safe.txt");
+    match result {
+        Ok(text) => {
+            print(text);
+        }
+        Err(error) => {
+            print(error);
+        }
+    }
+}
