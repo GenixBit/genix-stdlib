@@ -6,42 +6,19 @@ The official standard library for the **Genix programming language** by **GenixB
 
 ## Compatibility
 
-The standard library publishes machine-readable compatibility metadata in `COMPATIBILITY`.
-
-Current compatibility:
-
 ```text
 GENIX_STDLIB_VERSION=0.0.1
 GENIX_LANGUAGE_VERSION=0.0.1
 GENIX_RUNTIME_ABI=1
 ```
 
-The Genix compiler validates this metadata before loading an official stdlib module.
+The compiler validates `COMPATIBILITY` before loading official stdlib modules.
 
-## Use the standard library
-
-During source development, point the compiler to this repository or an installed stdlib directory:
+## Setup
 
 ```bash
 export GENIX_STDLIB=/path/to/genix-stdlib
-```
-
-Then a normal Genix project can import standard modules:
-
-```gb
-import io;
-import math;
-import string;
-
-fn main() {
-    io.println("Hello from Genix stdlib");
-
-    let value: int = math.abs_int(-42);
-    io.print_int(value);
-
-    let message: string = string.concat("Hello ", "Genix");
-    io.println(message);
-}
+export GENIX_RUNTIME=/path/to/genix-runtime
 ```
 
 Project-local modules take precedence over standard-library modules with the same name.
@@ -50,20 +27,54 @@ Project-local modules take precedence over standard-library modules with the sam
 
 ### `io`
 
-Current API:
-
 ```text
 io.println(text: string)
 io.print_int(value: int)
 io.print_float(value: float)
 io.print_bool(value: bool)
+io.input(prompt: string) -> string
 ```
 
-These functions are written in Genix and currently delegate to the language `print(...)` primitive. Input APIs will be added after the native intrinsic/FFI boundary is formalized.
+Example:
+
+```gb
+import io;
+
+fn main() {
+    let name: string = io.input("Your name: ");
+    io.println("Hello " + name);
+}
+```
+
+### `fs`
+
+```text
+fs.read_text(path: string) -> string
+fs.write_text(path: string, text: string)
+```
+
+Example:
+
+```gb
+import fs;
+
+fn main() {
+    fs.write_text("hello.txt", "Hello Genix");
+    let text: string = fs.read_text("hello.txt");
+    print(text);
+}
+```
+
+### `process`
+
+```text
+process.env(name: string) -> string
+process.exit(code: int)
+```
+
+A missing environment variable currently returns an empty string. Rich optional/result types will replace this simplified behavior once those language features exist.
 
 ### `math`
-
-Current API:
 
 ```text
 math.abs_int(value: int) -> int
@@ -76,13 +87,27 @@ math.square(value: float) -> float
 
 ### `string`
 
-Current API:
-
 ```text
 string.concat(left: string, right: string) -> string
 string.equals(left: string, right: string) -> bool
 string.not_equals(left: string, right: string) -> bool
 ```
+
+## Host intrinsic boundary
+
+Most standard-library code remains ordinary `.gb` source. OS-facing operations are recognized by the compiler at a small canonical boundary:
+
+```text
+io.input      → host stdin / gb_input
+fs.read_text  → host filesystem / gb_fs_read_text
+fs.write_text → host filesystem / gb_fs_write_text
+process.env   → host environment / gb_env_get
+process.exit  → host process / gb_process_exit
+```
+
+Users call the normal stdlib APIs; the compiler-specific mapping is an implementation detail. `gb run` provides equivalent behavior through the Rust interpreter, while `gb build` lowers the calls to Genix Runtime ABI services.
+
+This is the bootstrap intrinsic layer. A formal native/FFI declaration system is still planned for external libraries and advanced platform integrations.
 
 ## Repository layout
 
@@ -91,6 +116,8 @@ genix-stdlib/
 ├── COMPATIBILITY
 ├── modules/
 │   ├── io.gb
+│   ├── fs.gb
+│   ├── process.gb
 │   ├── math.gb
 │   └── string.gb
 ├── examples/
@@ -102,48 +129,34 @@ genix-stdlib/
 
 ## Architecture
 
-Standard-library modules are ordinary `.gb` source modules. This keeps most high-level APIs portable and testable by both the interpreter and native compiler.
-
 ```text
 Genix application
       ↓
-Genix stdlib modules
+Genix stdlib
       ↓
-Language primitives / future intrinsics
+portable .gb code + host intrinsic boundary
       ↓
 Genix Runtime ABI
       ↓
 Operating system
 ```
 
-Low-level functionality that requires operating-system access will use a documented compiler intrinsic / runtime ABI boundary rather than embedding platform-specific behavior directly in `.gb` modules.
-
 ## Planned modules
 
 - `core`
 - `collections`
-- `fs`
 - `path`
 - `json`
 - `time`
 - `net`
 - `http`
 - `crypto`
-- `process`
 - `concurrent`
 - `test`
 
-`process` and other OS-facing APIs are intentionally not faked in the first release. They will be implemented after the native intrinsic/FFI contract is defined.
-
 ## Validation
 
-CI validates the stdlib against the current `genix-lang` compiler and `genix-runtime`, including:
-
-- Static type checking
-- Interpreter execution
-- Typed Genix IR generation
-- Native compilation
-- Execution of the generated native binary
+CI validates the stdlib against `genix-lang` and `genix-runtime`, including static type checking, interpreter execution, typed IR generation, native compilation, and native execution.
 
 ---
 
