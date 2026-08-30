@@ -1,8 +1,20 @@
 // Genix filesystem APIs. These functions are compiler-recognized host intrinsics.
 
+// Transitional panic-on-error API retained for compatibility.
 fn read_text(path: string) -> string {
     return "";
 }
 
+// Preferred safe API.
+fn try_read_text(path: string) -> Result<string,string> {
+    return Err("filesystem intrinsic unavailable");
+}
+
+// Transitional panic-on-error API retained for compatibility.
 fn write_text(path: string, text: string) {
+}
+
+// Preferred safe API. Ok(true) means the write completed.
+fn try_write_text(path: string, text: string) -> Result<bool,string> {
+    return Err("filesystem intrinsic unavailable");
 }
