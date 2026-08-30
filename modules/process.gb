@@ -1,7 +1,13 @@
 // Genix process APIs. These functions are compiler-recognized host intrinsics.
 
+// Transitional empty-string API retained for compatibility.
 fn env(name: string) -> string {
     return "";
+}
+
+// Preferred safe API: None means the variable is not set.
+fn env_option(name: string) -> Option<string> {
+    return None;
 }
 
 fn exit(code: int) {
