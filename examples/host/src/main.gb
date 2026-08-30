@@ -1,0 +1,10 @@
+import io;
+import fs;
+import process;
+
+fn main() {
+    let name: string = io.input("Name: ");
+    fs.write_text("stdlib-host.txt", "Hello " + name);
+    io.println(fs.read_text("stdlib-host.txt"));
+    io.println(process.env("GENIX_STDLIB_HOST_TEST"));
+}
